@@ -40,8 +40,8 @@ void draw_game_matrix(SDL_Surface* surface, int rows, int columns, int* game_mat
 	{
 		for(int j=0;j<columns;j++)
 		{
-			int cell_value = *(game_matrix + i*rows + j);
-			draw_cell(surface, i, j, cell_value);
+			int cell_value = game_matrix[j + columns * i];
+			draw_cell(surface, j, i, cell_value);
 		}
 
 	}
@@ -55,7 +55,8 @@ void initialize_game_matrix(int rows, int columns, int *game_matrix)
 	{
 		for(int j=0;j<columns;j++)
 		{
-			*(game_matrix + i*rows + j) = rand() % 2;
+			game_matrix[j + columns * i] = rand() % 2;
+			//*(game_matrix + i*columns + j) = rand() % 2;
 		}
 	}
 }
@@ -64,7 +65,6 @@ void initialize_game_matrix(int rows, int columns, int *game_matrix)
 
 int main()
 {
-	printf("Hola mundo\n");
 	
 	SDL_Init(SDL_INIT_VIDEO);
 	
@@ -80,15 +80,30 @@ int main()
 	int row_count = SURFACE_HEIGHT / CELL_WIDTH;
 	int column_count = SURFACE_WIDTH / CELL_WIDTH;
 	int game_matrix[row_count][column_count];
-	initialize_game_matrix(row_count,column_count,game_matrix[0]);
 
 	int cell_x = 10;
 	int cell_y = 6;
 
-	draw_game_matrix(surface, row_count, column_count, game_matrix[0]);
-	draw_grid(surface, columns, rows);
-	SDL_UpdateWindowSurface(window);
-	SDL_Delay(5000);
+
+	int simulation_ongoing = 1;
+	SDL_Event event;
+	while(simulation_ongoing)
+	{
+		while(SDL_PollEvent(&event))
+		{
+			if(event.type == SDL_QUIT)
+			{
+				simulation_ongoing = 0;
+			}
+
+		}
+		
+		initialize_game_matrix(row_count,column_count,game_matrix[0]);
+		draw_game_matrix(surface, row_count, column_count, game_matrix[0]);
+		draw_grid(surface, columns, rows);
+		SDL_UpdateWindowSurface(window);
+		SDL_Delay(1000);
+	}
 	
 
 }
