@@ -59,7 +59,7 @@ void initialize_game_matrix(int rows, int columns, int *game_matrix)
 	{
 		for(int j=0;j<columns;j++)
 		{
-			game_matrix[j + columns * i] = rand() > RAND_MAX * 9.2 / 10.0;;
+			game_matrix[j + columns * i] = (rand() % 2) * (rand() % 2) * (rand() % 2) * (rand() % 2);
 			//*(game_matrix + i*columns + j) = rand() % 2;
 		}
 	}
