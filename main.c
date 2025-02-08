@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include <time.h>
+#include <stdlib.h>
 
 Uint32 COLOR_WHITE = 0xffffffff;
 Uint32 COLOR_GRAY = 0x2f2f2f2f;
 Uint32 COLOR_BLACK = 0x00000000;
 int SURFACE_WIDTH = 900;
 int SURFACE_HEIGHT = 600;
-int CELL_WIDTH = 30;
+int CELL_WIDTH = 10;
 int LINE_WIDTH = 2;
 
 //::::::::::::::::::::::::::::::::::::::::
@@ -57,7 +59,7 @@ void initialize_game_matrix(int rows, int columns, int *game_matrix)
 	{
 		for(int j=0;j<columns;j++)
 		{
-			game_matrix[j + columns * i] = rand() % 2 && rand() % 2;
+			game_matrix[j + columns * i] = rand() > RAND_MAX * 9.2 / 10.0;;
 			//*(game_matrix + i*columns + j) = rand() % 2;
 		}
 	}
@@ -72,7 +74,7 @@ int count_neighbors(int i, int j, int row_count, int column_count, int game_matr
 	if (j > 0)
 		neighbor_counter += game_matrix[j-1 + column_count * i];
 	// righthand neighbor
-	if (j < (column_count - 1))
+	if (j < (column_count))
 		neighbor_counter += game_matrix[j+1 + column_count * i];
 	// above neighbor
 	if (i > 0)
@@ -81,23 +83,26 @@ int count_neighbors(int i, int j, int row_count, int column_count, int game_matr
 	if ( i> 0 && j > 0)
 		neighbor_counter += game_matrix[j-1 + column_count * (i-1)];
 	// above right neighbor
-	if ( i > 0 && j < (column_count -1))
+	if ( i > 0 && j < (column_count))
 		neighbor_counter += game_matrix[j+1 + column_count * (i-1)];
 	// below neighbor
-	if (i < (row_count -1))
+	if (i < (row_count))
 		neighbor_counter += game_matrix[j + column_count * (i+1)];
 	// below left neighbor
-	if ( i < (row_count - 1) && j > 0)
+	if ( i < (row_count) && j > 0)
 		neighbor_counter += game_matrix[j-1 + column_count * (i+1)];
 	// below right neighbor
-	if ( i < (row_count - 1) && j < (column_count -1))
+	if ( i < (row_count) && j < (column_count))
 		neighbor_counter += game_matrix[j+1 + column_count * (i+1)];
-	 return neighbor_counter;	
+	 
+	return neighbor_counter;	
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::
 void simulation_step(int rows, int columns, int game_matrix[])
-{
+{	
+	int next_game_matrix[rows*columns];
+
 	for(int i=0;i<rows;i++)
 	{
 		for(int j=0;j<columns;j++)
@@ -107,34 +112,48 @@ void simulation_step(int rows, int columns, int game_matrix[])
 			int current_cell_value = game_matrix[j + columns*i];
 			
 			// rule 1
-			if (neighbor_count <  2)
-				game_matrix[j + columns*i] = 0;
-			
+			if (current_cell_value != 0 && neighbor_count <  2)
+			{
+				next_game_matrix[j + columns*i] = 0;
+			}
 			// rule 2
-			if (current_cell_value != 0 && (neighbor_count == 2 || neighbor_count == 3))
-				continue;
-			
+			else if (current_cell_value != 0 && (neighbor_count == 2 || neighbor_count == 3))
+			{
+				next_game_matrix[j + columns*i] = 1;
+			}
 			// rule 3
-			if (current_cell_value != 0 && neighbor_count > 3)
-				game_matrix[j + columns*i] = 0;
-			
+			else if (current_cell_value != 0 && neighbor_count > 3)
+			{
+				next_game_matrix[j + columns*i] = 0;
+			}
 			// rule 4
-			if (current_cell_value == 0 && neighbor_count == 3)
-				game_matrix[j + columns*i] = 1;
-			
-
+			else if (current_cell_value == 0 && neighbor_count == 3)
+			{
+				next_game_matrix[j + columns*i] = 1;
+			}
+			else
+			{
+				next_game_matrix[j + columns*i] = current_cell_value;
+			}
 		}
+	}
+
+	for (int i=0; i<rows*columns; i++)
+	{
+		game_matrix[i] = next_game_matrix[i];
 	}
 }
 
 //#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#
 int main()
-{
+{	
+
 	
 	SDL_Init(SDL_INIT_VIDEO);
 	
 	char* window_title = "Conway's game of life";
-
+	// Seeding de random number generator
+	srand(time(NULL));
 	int columns = SURFACE_WIDTH / CELL_WIDTH;
 	int rows = SURFACE_HEIGHT / CELL_WIDTH;
 	
@@ -149,7 +168,7 @@ int main()
 	int cell_x = 10;
 	int cell_y = 6;
 
-
+	
 	initialize_game_matrix(row_count,column_count,game_matrix);
 	int simulation_ongoing = 1;
 	SDL_Event event;
@@ -167,7 +186,7 @@ int main()
 		draw_game_matrix(surface, row_count, column_count, game_matrix);
 		draw_grid(surface, columns, rows);
 		SDL_UpdateWindowSurface(window);
-		SDL_Delay(300);
+		SDL_Delay(100);
 	}
 	
 
