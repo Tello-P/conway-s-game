@@ -2,13 +2,14 @@
 #include <SDL2/SDL.h>
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 Uint32 COLOR_WHITE = 0xffffffff;
 Uint32 COLOR_GRAY = 0x2f2f2f2f;
 Uint32 COLOR_BLACK = 0x00000000;
 int SURFACE_WIDTH = 900;
 int SURFACE_HEIGHT = 600;
-int CELL_WIDTH = 10;
+int CELL_WIDTH = 20;
 int LINE_WIDTH = 2;
 
 //::::::::::::::::::::::::::::::::::::::::
@@ -53,13 +54,26 @@ void draw_game_matrix(SDL_Surface* surface, int rows, int columns, int* game_mat
 }
 
 //::::::::::::::::::::::::::::::::::::::::::::::
-void initialize_game_matrix(int rows, int columns, int *game_matrix)
+void randomize_game_matrix(int rows, int columns, int *game_matrix)
 {
 	for(int i=0;i<rows;i++)
 	{
 		for(int j=0;j<columns;j++)
 		{
-			game_matrix[j + columns * i] = (rand() % 2) * (rand() % 2) * (rand() % 2) * (rand() % 2);
+			game_matrix[j + columns * i] = (rand() % 2);
+			//*(game_matrix + i*columns + j) = rand() % 2;
+		}
+	}
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::
+void blank_game_matrix(int rows, int columns, int *game_matrix)
+{
+	for(int i=0;i<rows;i++)
+	{
+		for(int j=0;j<columns;j++)
+		{
+			game_matrix[j + columns * i] = 0;
 			//*(game_matrix + i*columns + j) = rand() % 2;
 		}
 	}
@@ -144,9 +158,55 @@ void simulation_step(int rows, int columns, int game_matrix[])
 	}
 }
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void set_cell_in_game_matrix(Sint32 mouse_x, Sint32 mouse_y, int rows, int columns, int game_matrix[])
+{
+	int j = mouse_x / CELL_WIDTH;
+	int i = mouse_y / CELL_WIDTH;
+	game_matrix[j + columns*i] = !game_matrix[j + columns*i];
+}
+
+
 //#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#
-int main()
+int main(int argc, char* argv[])
 {	
+	if (argc > 1) 
+	{
+        	if(strcmp(argv[1],"--help") == 0)
+		{
+			printf("HELP MENU.............................\n");
+			printf("\n	First argument is cell width\n");
+			printf("	The higher, the less cells are\n");
+			printf("Example of usage:\n");
+			printf("	./gol 10\n	./gol 19\n");
+			printf("	Argument --keys for usage\n\n");
+
+			return 1;
+		}
+		else if(strcmp(argv[1],"--keys") == 0)
+		{	
+			printf("KEY MENU.......................................\n");
+			printf("	SPACE............Start/Stop time\n");
+			printf("	BACKSPACE........Remove all cells\n");
+			printf("	ENTER............Random cell generation\n\n");
+			return 1;
+		}
+		else
+		{
+			CELL_WIDTH = atoi(argv[1]);
+			if (CELL_WIDTH < 5 || CELL_WIDTH > 100)
+			{
+				printf("Error in cell width value, please use a number greater than 5 and lower than 100");
+			return 1;
+			}
+  		}
+	}
+	else
+	{
+        CELL_WIDTH = 20; // default
+    	}
+	
+
 
 	
 	SDL_Init(SDL_INIT_VIDEO);
@@ -169,24 +229,73 @@ int main()
 	int cell_y = 6;
 
 	
-	initialize_game_matrix(row_count,column_count,game_matrix);
-	int simulation_ongoing = 1;
+	randomize_game_matrix(row_count,column_count,game_matrix);
+	draw_game_matrix(surface, row_count, column_count, game_matrix);
+	draw_grid(surface, columns, rows);
+	SDL_UpdateWindowSurface(window);
+
+	int game_loop = 1;
+	int simulation_paused = 1;
 	SDL_Event event;
-	while(simulation_ongoing)
+	while(game_loop)
 	{
 		while(SDL_PollEvent(&event))
 		{
 			if(event.type == SDL_QUIT)
 			{
-				simulation_ongoing = 0;
+				game_loop = 0;
 			}
+			else if(event.type == SDL_KEYDOWN)
+			{
+				if (event.key.keysym.sym == SDLK_SPACE)
+				{
+					simulation_paused = !simulation_paused;
+				}
+				if (event.key.keysym.sym == SDLK_RETURN)
+				{
+					randomize_game_matrix(row_count, column_count, game_matrix);
+					draw_game_matrix(surface, row_count, column_count, game_matrix);
+					draw_grid(surface, columns, rows);
+					SDL_UpdateWindowSurface(window);
+
+				}
+				if (event.key.keysym.sym == SDLK_BACKSPACE)
+				{
+					blank_game_matrix(row_count, column_count, game_matrix);
+					draw_game_matrix(surface, row_count, column_count, game_matrix);
+					draw_grid(surface, columns, rows);
+					SDL_UpdateWindowSurface(window);
+
+				}
+				
+
+			}
+			else if (event.type == SDL_MOUSEBUTTONDOWN)
+			{
+				Sint32 mouse_x = event.button.x;
+				Sint32 mouse_y = event.button.y;
+				set_cell_in_game_matrix(mouse_x, mouse_y, row_count, column_count, game_matrix);	
+				draw_game_matrix(surface, row_count, column_count, game_matrix);
+				draw_grid(surface, columns, rows);
+				SDL_UpdateWindowSurface(window);
+			}
+		}
+		if (!simulation_paused)
+		{
+			simulation_step(row_count, column_count, game_matrix);		
+			draw_game_matrix(surface, row_count, column_count, game_matrix);
+			draw_grid(surface, columns, rows);
+			SDL_UpdateWindowSurface(window);
+			SDL_Delay(100);
 
 		}
-		simulation_step(row_count, column_count, game_matrix);		
-		draw_game_matrix(surface, row_count, column_count, game_matrix);
-		draw_grid(surface, columns, rows);
-		SDL_UpdateWindowSurface(window);
-		SDL_Delay(100);
+		else
+		{
+			SDL_Delay(200);
+		}
+
+
+		
 	}
 	
 
