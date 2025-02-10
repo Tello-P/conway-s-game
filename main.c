@@ -167,6 +167,7 @@ void set_cell_in_game_matrix_on(Sint32 mouse_x, Sint32 mouse_y, int rows, int co
 
 }
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 void set_cell_in_game_matrix_off(Sint32 mouse_x, Sint32 mouse_y, int rows, int columns, int game_matrix[])
 {
 	int j = mouse_x / CELL_WIDTH;
@@ -174,6 +175,34 @@ void set_cell_in_game_matrix_off(Sint32 mouse_x, Sint32 mouse_y, int rows, int c
 	game_matrix[j + columns*i] = 0;//!game_matrix[j + columns*i];
 
 }
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void draw_waiting(SDL_Surface* surface)
+{
+	
+	
+	SDL_Rect pause_block1 = (SDL_Rect) {0,0,10,20};
+	SDL_FillRect(surface, &pause_block1, COLOR_WHITE);
+	
+	SDL_Rect pause_block2 = (SDL_Rect) {15,0,10,20};
+	SDL_FillRect(surface, &pause_block2, COLOR_WHITE);
+	
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+void draw_erase(SDL_Surface* surface)
+{
+	
+	
+	SDL_Rect pause_block1 = (SDL_Rect) {0, 0,200,200};
+	SDL_FillRect(surface, &pause_block1, COLOR_WHITE);
+	
+	SDL_Rect pause_block2 = (SDL_Rect) {0,120,200,200};
+	SDL_FillRect(surface, &pause_block2, COLOR_WHITE);
+	
+}
+
+
 
 //#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#
 int main(int argc, char* argv[])
@@ -246,11 +275,19 @@ int main(int argc, char* argv[])
 	int simulation_paused = 1;
 	int insert_mode = 1;
 	int erase_mode = 0;
+	// running, waiting, erasing
+	
 	SDL_Event event;
 	while(game_loop)
 	{
 		while(SDL_PollEvent(&event))
 		{
+			if (simulation_paused == 1)
+			{
+				draw_waiting(surface);
+				SDL_UpdateWindowSurface(window);
+			}
+
 			if(event.type == SDL_QUIT)
 			{
 				game_loop = 0;
@@ -261,12 +298,21 @@ int main(int argc, char* argv[])
 				if (event.key.keysym.sym == SDLK_SPACE)
 				{
 					simulation_paused = !simulation_paused;
+					if (simulation_paused == 1)
+					{
+						draw_waiting(surface);
+						SDL_UpdateWindowSurface(window);
+					}
 				}
 				if (event.key.keysym.sym == SDLK_RETURN)
 				{
 					randomize_game_matrix(row_count, column_count, game_matrix);
 					draw_game_matrix(surface, row_count, column_count, game_matrix);
 					draw_grid(surface, columns, rows);
+					if (simulation_paused == 1)
+					{
+						draw_waiting(surface);
+					}
 					SDL_UpdateWindowSurface(window);
 				}
 				if (event.key.keysym.sym == SDLK_BACKSPACE)
@@ -274,12 +320,22 @@ int main(int argc, char* argv[])
 					blank_game_matrix(row_count, column_count, game_matrix);
 					draw_game_matrix(surface, row_count, column_count, game_matrix);
 					draw_grid(surface, columns, rows);
+					if (simulation_paused == 1)
+					{
+						draw_waiting(surface);
+					}
 					SDL_UpdateWindowSurface(window);
+
 				}	
 				if (event.key.keysym.sym == SDLK_LSHIFT)
 				{
 					insert_mode = !insert_mode;
 					erase_mode = !erase_mode;
+					if (simulation_paused == 1)
+					{
+						draw_waiting(surface);
+						SDL_UpdateWindowSurface(window);
+					}
 				}
 
 			}
@@ -295,6 +351,11 @@ int main(int argc, char* argv[])
 						set_cell_in_game_matrix_on(mouse_x, mouse_y, row_count, column_count, game_matrix);	
 						draw_game_matrix(surface, row_count, column_count, game_matrix);
 						draw_grid(surface, columns, rows);
+					
+						if (simulation_paused == 1)
+						{
+							draw_waiting(surface);
+						}
 						SDL_UpdateWindowSurface(window);
 					}
 				}
@@ -306,9 +367,14 @@ int main(int argc, char* argv[])
 					set_cell_in_game_matrix_on(mouse_x, mouse_y, row_count, column_count, game_matrix);	
 					draw_game_matrix(surface, row_count, column_count, game_matrix);
 					draw_grid(surface, columns, rows);
-					SDL_UpdateWindowSurface(window);
 				
+					if (simulation_paused == 1)
+					{
+						draw_waiting(surface);
+					}
+					SDL_UpdateWindowSurface(window);
 				}
+
 			}
 			else if (insert_mode == 0 && erase_mode == 1)
 			{
@@ -321,6 +387,11 @@ int main(int argc, char* argv[])
 						set_cell_in_game_matrix_off(mouse_x, mouse_y, row_count, column_count, game_matrix);	
 						draw_game_matrix(surface, row_count, column_count, game_matrix);
 						draw_grid(surface, columns, rows);
+					
+						if (simulation_paused == 1)
+						{
+							draw_waiting(surface);
+						}
 						SDL_UpdateWindowSurface(window);
 					}
 				}
@@ -332,8 +403,12 @@ int main(int argc, char* argv[])
 					set_cell_in_game_matrix_off(mouse_x, mouse_y, row_count, column_count, game_matrix);	
 					draw_game_matrix(surface, row_count, column_count, game_matrix);
 					draw_grid(surface, columns, rows);
+					
+					if (simulation_paused == 1)
+					{
+						draw_waiting(surface);
+					}
 					SDL_UpdateWindowSurface(window);
-				
 				}	
 			}
 			
