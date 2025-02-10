@@ -159,13 +159,21 @@ void simulation_step(int rows, int columns, int game_matrix[])
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-void set_cell_in_game_matrix(Sint32 mouse_x, Sint32 mouse_y, int rows, int columns, int game_matrix[])
+void set_cell_in_game_matrix_on(Sint32 mouse_x, Sint32 mouse_y, int rows, int columns, int game_matrix[])
 {
 	int j = mouse_x / CELL_WIDTH;
 	int i = mouse_y / CELL_WIDTH;
-	game_matrix[j + columns*i] = !game_matrix[j + columns*i];
+	game_matrix[j + columns*i] = 1;//!game_matrix[j + columns*i];
+
 }
 
+void set_cell_in_game_matrix_off(Sint32 mouse_x, Sint32 mouse_y, int rows, int columns, int game_matrix[])
+{
+	int j = mouse_x / CELL_WIDTH;
+	int i = mouse_y / CELL_WIDTH;
+	game_matrix[j + columns*i] = 0;//!game_matrix[j + columns*i];
+
+}
 
 //#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#·#
 int main(int argc, char* argv[])
@@ -236,6 +244,8 @@ int main(int argc, char* argv[])
 
 	int game_loop = 1;
 	int simulation_paused = 1;
+	int insert_mode = 1;
+	int erase_mode = 0;
 	SDL_Event event;
 	while(game_loop)
 	{
@@ -245,6 +255,7 @@ int main(int argc, char* argv[])
 			{
 				game_loop = 0;
 			}
+			
 			else if(event.type == SDL_KEYDOWN)
 			{
 				if (event.key.keysym.sym == SDLK_SPACE)
@@ -257,7 +268,6 @@ int main(int argc, char* argv[])
 					draw_game_matrix(surface, row_count, column_count, game_matrix);
 					draw_grid(surface, columns, rows);
 					SDL_UpdateWindowSurface(window);
-
 				}
 				if (event.key.keysym.sym == SDLK_BACKSPACE)
 				{
@@ -265,20 +275,68 @@ int main(int argc, char* argv[])
 					draw_game_matrix(surface, row_count, column_count, game_matrix);
 					draw_grid(surface, columns, rows);
 					SDL_UpdateWindowSurface(window);
-
+				}	
+				if (event.key.keysym.sym == SDLK_LSHIFT)
+				{
+					insert_mode = !insert_mode;
+					erase_mode = !erase_mode;
 				}
-				
 
 			}
-			else if (event.type == SDL_MOUSEBUTTONDOWN)
-			{
-				Sint32 mouse_x = event.button.x;
-				Sint32 mouse_y = event.button.y;
-				set_cell_in_game_matrix(mouse_x, mouse_y, row_count, column_count, game_matrix);	
-				draw_game_matrix(surface, row_count, column_count, game_matrix);
-				draw_grid(surface, columns, rows);
-				SDL_UpdateWindowSurface(window);
+
+			if (insert_mode == 1 && erase_mode == 0)
+			{	
+				if (event.type == SDL_MOUSEMOTION)
+				{
+					if (event.motion.state != 0)
+					{
+						Sint32 mouse_x = event.motion.x;
+						Sint32 mouse_y = event.motion.y;
+						set_cell_in_game_matrix_on(mouse_x, mouse_y, row_count, column_count, game_matrix);	
+						draw_game_matrix(surface, row_count, column_count, game_matrix);
+						draw_grid(surface, columns, rows);
+						SDL_UpdateWindowSurface(window);
+					}
+				}
+				else if (event.type == SDL_MOUSEBUTTONDOWN)
+				{
+				
+					Sint32 mouse_x = event.button.x;
+					Sint32 mouse_y = event.button.y;
+					set_cell_in_game_matrix_on(mouse_x, mouse_y, row_count, column_count, game_matrix);	
+					draw_game_matrix(surface, row_count, column_count, game_matrix);
+					draw_grid(surface, columns, rows);
+					SDL_UpdateWindowSurface(window);
+				
+				}
 			}
+			else if (insert_mode == 0 && erase_mode == 1)
+			{
+				if (event.type == SDL_MOUSEMOTION)
+				{
+					if (event.motion.state != 0)
+					{
+						Sint32 mouse_x = event.motion.x;
+						Sint32 mouse_y = event.motion.y;
+						set_cell_in_game_matrix_off(mouse_x, mouse_y, row_count, column_count, game_matrix);	
+						draw_game_matrix(surface, row_count, column_count, game_matrix);
+						draw_grid(surface, columns, rows);
+						SDL_UpdateWindowSurface(window);
+					}
+				}
+				else if (event.type == SDL_MOUSEBUTTONDOWN)
+				{
+				
+					Sint32 mouse_x = event.button.x;
+					Sint32 mouse_y = event.button.y;
+					set_cell_in_game_matrix_off(mouse_x, mouse_y, row_count, column_count, game_matrix);	
+					draw_game_matrix(surface, row_count, column_count, game_matrix);
+					draw_grid(surface, columns, rows);
+					SDL_UpdateWindowSurface(window);
+				
+				}	
+			}
+			
 		}
 		if (!simulation_paused)
 		{
@@ -291,7 +349,7 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			SDL_Delay(200);
+			SDL_Delay(100);
 		}
 
 
