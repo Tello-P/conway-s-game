@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-        CELL_WIDTH = 20; // default
+        CELL_WIDTH = 15; // default
     	}
 	
 
