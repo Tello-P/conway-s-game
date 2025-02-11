@@ -223,6 +223,7 @@ int main(int argc, char* argv[])
 			printf("KEY MENU.......................................\n");
 			printf("	SPACE............Start/Stop time\n");
 			printf("	BACKSPACE........Remove all cells\n");
+			printf("	SHIFT............Start/Stop erase mode\n");
 			printf("	ENTER............Random cell generation\n\n");
 			return 1;
 		}
